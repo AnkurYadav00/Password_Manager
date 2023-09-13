@@ -26,9 +26,11 @@ def search():
             data = json.load(file)
         creds = data[website]
     except KeyError:
-        messagebox.showinfo(title="No Details", message=f"No Data Found")
+        messagebox.showinfo(title="No Details", message=f"No Data Found for {website}")
+    except FileNotFoundError:
+        messagebox.showinfo(title="Error!!", message="Data File missing")
     else:
-        messagebox.showinfo(title=f"{website} Creds",
+        messagebox.showinfo(title=f"{website}",
                             message=f"Username : {creds['email']}\nPassword : {creds['password']}")
 
 
@@ -150,7 +152,7 @@ web_entry = Entry(width=33)
 web_entry.focus()
 web_entry.grid(row=1, column=1)
 
-email_entry = Entry(width=52)
+email_entry = Entry(width=51)
 email_entry.insert(END, "@mail.com")
 email_entry.grid(row=2, column=1, columnspan=2)
 
@@ -159,13 +161,13 @@ pass_entry.grid(row=3, column=1)
 
 # ----------------- Button -------------------- #
 
-generate_pd_button = Button(text="Generate Password", bg="#9EB384", fg="blue", command=pwd_generator, border=0)
+generate_pd_button = Button(text="Generate Password", fg="blue", command=pwd_generator, border=0.5)
 generate_pd_button.grid(row=3, column=2)
 
-add_button = Button(text="Add", width=44, bg="#9EB384", fg="blue", command=save_data, border=0.4)
+add_button = Button(text="Add", width=44, fg="blue", command=save_data, border=0.5)
 add_button.grid(row=4, column=1, columnspan=2)
 
-search_button = Button(text="Search", width=14, bg="#9EB384", fg="blue", command=search, border=0.4)
+search_button = Button(text="Search", width=14, fg="blue", command=search, border=0.5)
 search_button.grid(row=1, column=2)
 
 window.mainloop()
