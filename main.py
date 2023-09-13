@@ -1,3 +1,4 @@
+import json
 import string
 from tkinter import *
 from tkinter import messagebox
@@ -15,6 +16,20 @@ data_container = {
     "username": [],
     "password": [],
 }
+
+
+# ---------------------------- SEARCH PASSWORD ------------------------------- #
+def search():
+    website = web_entry.get()
+    try:
+        with open("./data.json") as file:
+            data = json.load(file)
+        creds = data[website]
+    except KeyError:
+        messagebox.showinfo(title="No Details", message=f"No Data Found")
+    else:
+        messagebox.showinfo(title=f"{website} Creds",
+                            message=f"Username : {creds['email']}\nPassword : {creds['password']}")
 
 
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
@@ -38,22 +53,9 @@ def pwd_generator():
 
 
 # ---------------------------- SAVE PASSWORD ------------------------------- #
-def save_data():
-    global data_container
-    website = web_entry.get()
-    user = email_entry.get()
-    password = pass_entry.get()
 
-    if not (len(website) > 0 and len(password) > 0):
-        messagebox.showerror(title="Oops!!", message="Don't leave any field empty!!")
-        return None
-
-    is_ok = messagebox.askokcancel(title=website, message=f"Do you want to proceed with the details entered?"
-                                                          f" \nWebsite: {website}\nUsername: {user}\nPassword: {password}")
-    if not is_ok:
-        return None
-
-    # save into csv file
+def csv_data(website, user, password):
+    # TODO : save into csv file
     df_csv = pd.read_csv("data.csv")
     data_container["website"].append(website)
     data_container["username"].append(user)
@@ -62,14 +64,62 @@ def save_data():
     df_new = pd.concat([df_csv, df])
     df_new.to_csv("data.csv", index=False)
 
-    # save into text file
+
+def save_data():
+    global data_container
+    #  getting data from entries
+    website = web_entry.get()
+    user = email_entry.get()
+    password = pass_entry.get()
+
+    # length of website and password should be > 0
+    if not (len(website) > 0 and len(password) > 0):
+        messagebox.showerror(title="Oops!!", message="Don't leave any field empty!!")
+        return None
+
+    # is_ok = messagebox.askokcancel(title=website, message=f"Do you want to proceed with the details entered?"
+    #                                                       f" \nWebsite: {website}\nUsername: {user}\nPassword: {password}")
+    # if not is_ok:
+    #     return None
+
+    # TODO : saving data into csv using pandas
+    try:
+        csv_data(website, user, password)
+    except FileNotFoundError:
+        open("data.csv", "w")
+        csv_data(website, user, password)
+
+    # TODO : save into text file
     with open('./data.txt', "a") as file:
         file.write(f"{website} | {user} | {password}\n")
 
-    # TODO : deletes entered text once add button is clicked
-    web_entry.delete(0, END)
-    # email_entry.delete(0, END)
-    pass_entry.delete(0, END)
+    # TODO: save to json file
+    new_data = {
+        website: {
+            "email": user,
+            "password": password
+        },
+    }
+    try:
+        with open("./data.json", "r") as file:
+            # read json
+            data = json.load(file)
+            # update json with new data
+            data.update(new_data)
+    except FileNotFoundError:
+        # create json file is not present
+        with open("./data.json", "w") as data_file:
+            # write json
+            json.dump(new_data, data_file, indent=4)
+    else:
+        with open("./data.json", "w") as data_file:
+            # write json
+            json.dump(data, data_file, indent=4)
+    finally:
+        # TODO : deletes entered text once add button is clicked
+        web_entry.delete(0, END)
+        # email_entry.delete(0, END)
+        pass_entry.delete(0, END)
 
 
 # ---------------------------- UI SETUP ------------------------------- #
@@ -96,9 +146,9 @@ pass_label.grid(row=3, column=0)
 
 # ------------------ Entry -------------------- #
 
-web_entry = Entry(width=52)
+web_entry = Entry(width=33)
 web_entry.focus()
-web_entry.grid(row=1, column=1, columnspan=2)
+web_entry.grid(row=1, column=1)
 
 email_entry = Entry(width=52)
 email_entry.insert(END, "@mail.com")
@@ -109,10 +159,13 @@ pass_entry.grid(row=3, column=1)
 
 # ----------------- Button -------------------- #
 
-generate_pd_button = Button(text="Generate Password", bg="grey", fg="white", command=pwd_generator, border=0)
+generate_pd_button = Button(text="Generate Password", bg="#9EB384", fg="blue", command=pwd_generator, border=0)
 generate_pd_button.grid(row=3, column=2)
 
-add_button = Button(text="Add", width=44, bg="#F3FDE8", fg="blue", command=save_data, border=0)
+add_button = Button(text="Add", width=44, bg="#9EB384", fg="blue", command=save_data, border=0.4)
 add_button.grid(row=4, column=1, columnspan=2)
+
+search_button = Button(text="Search", width=14, bg="#9EB384", fg="blue", command=search, border=0.4)
+search_button.grid(row=1, column=2)
 
 window.mainloop()
